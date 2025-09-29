@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>NextDNS Toggle</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .toast {
+      animation: dropDown 0.3s ease forwards;
+    }
+    .toast.fadeout {
+      animation: fadeOut 0.3s ease forwards;
+    }
+    @keyframes dropDown {
+      from { transform: translateY(-100%); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    @keyframes fadeOut {
+      from { opacity: 1; transform: translateY(0); }
+      to { opacity: 0; transform: translateY(-20%); }
+    }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center font-sans">
+
+  <div class="bg-white rounded-2xl shadow-lg p-8 w-96 text-center flex flex-col items-center relative">
+    <h1 class="text-2xl font-bold mb-6">NextDNS</h1>
+    <p id="status" class="text-red-600 text-lg font-semibold mb-6">Disconnected</p>
+
+    <label class="relative inline-flex items-center cursor-pointer mb-12" aria-label="NextDNS toggle">
+      <input type="checkbox" id="toggleSwitch" class="sr-only peer" aria-checked="false" />
+      <div class="w-28 h-14 bg-gray-300 rounded-full peer peer-checked:bg-green-500 
+                  after:content-[''] after:absolute after:top-[6px] after:left-[6px] 
+                  after:w-12 after:h-12 after:bg-white after:rounded-full after:shadow 
+                  after:transition-all peer-checked:after:translate-x-14"></div>
+    </label>
+
+    <div class="absolute bottom-4 left-1/2 -translate-x-1/2">
+      <button id="menuBtn"
+        class="w-12 h-12 flex items-center justify-center rounded-full bg-gray-200 hover:bg-gray-300 
+               text-2xl shadow-md active:shadow-inner active:scale-95 transition"
+        aria-haspopup="dialog" aria-controls="popup">
+        ⋯
+      </button>
+    </div>
+  </div>
+
+  <div id="popup" class="hidden fixed inset-0 bg-black/40 flex items-center justify-center" role="dialog" aria-modal="true">
+    <div class="bg-white w-80 rounded-2xl p-4 text-center shadow-lg relative">
+      <h2 class="text-base font-semibold mb-3">setting</h2>
+
+      <label class="block text-left text-sm mb-1">DNS Code</label>
+      <input id="dnsCode" maxlength="6" placeholder=""
+             class="w-full border rounded-lg p-2 text-center font-mono text-base tracking-widest mb-3" />
+
+      <label class="block text-left text-sm mb-1">Wi-Fi address</label>
+      <input id="wifiAddr" placeholder=""
+             class="w-full border rounded-lg p-2 text-center text-sm mb-4" />
+
+      <div class="flex gap-3">
+        <button id="savePopup" class="flex-1 py-2 bg-blue-500 text-white rounded-lg text-sm">SAVE</button>
+        <button id="cancelPopup" class="flex-1 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm">CLOSE</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toastContainer" class="fixed top-10 left-1/2 transform -translate-x-1/2 space-y-2 z-50"></div>
+
+  <script>
+    const statusEl = document.getElementById("status");
+    const toggle = document.getElementById("toggleSwitch");
+    const popup = document.getElementById("popup");
+    const menuBtn = document.getElementById("menuBtn");
+    const savePopup = document.getElementById("savePopup");
+    const cancelPopup = document.getElementById("cancelPopup");
+    const dnsCodeInput = document.getElementById("dnsCode");
+    const wifiAddrInput = document.getElementById("wifiAddr");
+    const toastContainer = document.getElementById("toastContainer");
+
+    let dnsCode = "";
+    let wifiAddr = "";
+    let toggleLocked = false;
+
+    function showToast(message, success=true) {
+      const toast = document.createElement("div");
+      toast.className = `toast px-4 py-2 rounded-xl shadow-md text-white text-sm font-semibold ${
+        success ? "bg-green-500" : "bg-red-500"
+      }`;
+      toast.textContent = message;
+      toastContainer.appendChild(toast);
+
+      toggleLocked = true;
+      toggle.disabled = true;
+
+      setTimeout(() => {
+        toast.classList.add("fadeout");
+      }, 1200);
+
+      setTimeout(() => {
+        toast.remove();
+        toggleLocked = false;
+        toggle.disabled = false;
+      }, 1500);
+    }
+
+    toggle.addEventListener("change", () => {
+      if (toggleLocked) {
+        toggle.checked = !toggle.checked;
+        return;
+      }
+
+      if (toggle.checked) {
+        statusEl.textContent = "Connected";
+        statusEl.className = "text-green-600 text-lg font-semibold mb-6";
+        let msg = "Connect success";
+        if (dnsCode) msg += ` (${dnsCode})`;
+        if (wifiAddr) msg += ` → ${wifiAddr}`;
+        showToast(msg, true);
+      } else {
+        statusEl.textContent = "Disconnected";
+        statusEl.className = "text-red-600 text-lg font-semibold mb-6";
+        let msg = "Disconnect success";
+        if (dnsCode) msg += ` (${dnsCode})`;
+        if (wifiAddr) msg += ` → ${wifiAddr}`;
+        showToast(msg, false);
+      }
+      toggle.setAttribute("aria-checked", toggle.checked.toString());
+    });
+
+    menuBtn.addEventListener("click", () => {
+      dnsCodeInput.value = dnsCode;
+      wifiAddrInput.value = wifiAddr;
+      popup.classList.remove("hidden");
+      dnsCodeInput.focus();
+    });
+
+    savePopup.addEventListener("click", () => {
+      dnsCode = dnsCodeInput.value.trim();
+      wifiAddr = wifiAddrInput.value.trim();
+      popup.classList.add("hidden");
+
+      let msgParts = [];
+      if (dnsCode) msgParts.push(`DNS: ${dnsCode}`);
+      if (wifiAddr) msgParts.push(`WiFi: ${wifiAddr}`);
+      const msg = msgParts.length ? `Save (${msgParts.join(" • ")})` : "Save";
+      showToast(msg, true);
+    });
+
+    cancelPopup.addEventListener("click", () => {
+      popup.classList.add("hidden");
+      showToast("Close", false);
+    });
+
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !popup.classList.contains("hidden")) {
+        popup.classList.add("hidden");
+      }
+    });
+  </script>
+</body>
+</html>
