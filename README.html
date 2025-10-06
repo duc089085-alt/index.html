@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <title>APP</title>
+  <style>
+    body {
+      font-family: Inter,system-ui,Segoe UI,Roboto,"Helvetica Neue",Arial;
+      margin:0;min-height:100vh;background:#0b1220;color:#e6eef6;
+      display:flex;align-items:center;justify-content:center;padding:16px
+    }
+    .card {
+      background:#111827;border-radius:16px;padding:20px;max-width:420px;width:100%;
+      box-shadow:0 6px 18px rgba(0,0,0,0.6);position:relative
+    }
+    h1{font-size:20px;margin:0 0 16px}
+    .row{display:flex;align-items:center;justify-content:space-between}
+    .toggle {
+      --w:56px;--h:30px;position:relative;width:var(--w);height:var(--h);
+      background:#15232b;border-radius:999px;padding:4px;cursor:pointer;
+      transition:background .22s;border:1px solid rgba(255,255,255,0.1);
+      display:inline-flex;align-items:center
+    }
+    .toggle[data-on="true"]{background:linear-gradient(90deg,#06b6d4,#0ea5a0)}
+    .knob {
+      width:22px;height:22px;background:#fff;border-radius:50%;transform:translateX(0);
+      transition:transform .18s;box-shadow:0 2px 6px rgba(0,0,0,.5)
+    }
+    .toggle[data-on="true"] .knob{transform:translateX(26px)}
+    .menu-btn {
+      background:#1f2937;border:none;color:#e6eef6;font-size:22px;
+      border-radius:8px;padding:4px 10px;cursor:pointer;position:relative
+    }
+    .menu {
+      position:absolute;top:100%;right:0;margin-top:8px;background:#1e293b;
+      padding:16px;border-radius:12px;box-shadow:0 8px 20px rgba(0,0,0,.6);
+      display:none;flex-direction:column;gap:12px;z-index:10;width:260px;max-width:90vw
+    }
+    .menu.show{display:flex}
+    .buff-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+    input[type=number]{
+      width:70px;padding:4px;border-radius:6px;border:1px solid #334155;
+      background:#0f172a;color:#fff
+    }
+    input[type=range]{width:100%}
+    .toast-wrap{
+      position:fixed;left:50%;top:20px;transform:translateX(-50%);
+      z-index:1000;text-align:center
+    }
+    .toast{
+      min-width:200px;margin-top:8px;background:#0b1720;padding:10px 14px;
+      border-radius:10px;box-shadow:0 4px 12px rgba(0,0,0,0.5);
+      opacity:0;transform:translateY(-20px);
+      transition:opacity .25s,transform .25s
+    }
+    .toast.show{opacity:1;transform:translateY(0)}
+    .info-btn{
+      position:absolute;top:12px;right:12px;background:#1f2937;border:none;
+      color:#e6eef6;font-size:16px;border-radius:50%;width:28px;height:28px;
+      cursor:pointer;display:flex;align-items:center;justify-content:center;
+    }
+    .info-box{
+      display:none;position:absolute;top:40px;right:12px;background:#1e293b;
+      padding:12px;border-radius:8px;width:250px;font-size:14px;
+      box-shadow:0 4px 12px rgba(0,0,0,.5);z-index:20
+    }
+    .info-box.show{display:block}
+    .info-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+    .info-close{background:transparent;border:none;color:#e6eef6;font-size:16px;cursor:pointer}
+    .spinner {
+      border: 4px solid #1f2937;
+      border-top: 4px solid #06b6d4;
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .progress-container {
+      margin-top: 10px;
+      width: 100%;
+      background: #1f2937;
+      border-radius: 8px;
+      overflow: hidden;
+      height: 20px;
+    }
+    .progress-bar {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg,#06b6d4,#0ea5a0);
+      transition: width 0.3s;
+    }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <div id="loadingWrapper" style="text-align:center;">
+      <button id="loadBtn" class="menu-btn">Loading App</button>
+      <div id="loadingArea" style="margin-top:10px; display:none;">
+        <div class="spinner"></div>
+        <div class="progress-container">
+          <div id="progressBar" class="progress-bar"></div>
+        </div>
+        <span id="progressText">0%</span>
+      </div>
+    </div>
+
+    <div id="appContent" style="display:none;">
+      <button class="info-btn" id="infoBtn">i</button>
+      <div class="info-box" id="infoBox">
+        <div class="info-header">
+          <strong>Thông tin</strong>
+          <button class="info-close" id="infoClose">✕</button>
+        </div>
+        <p><b>Version:</b> 1.0.0</p>
+        <p><b>Make by:</b> Minh Đức</p>
+        <p><b>Info:</b> APP ĐƯỢC LÀM BỞI MINH ĐỨC VÀ CÁC ĐỘI NGŨ UY TÍN NÊN ANH EM AN TÂM VỀ VẤN ĐỀ AN TOÀN. APP NHẠY MÀN BUFF MÀN DPI</p>
+      </div>
+
+      <h1>Nhạy màn</h1>
+      <div class="row" style="position:relative">
+        <button class="toggle" id="mainToggle" data-on="false" aria-label="Nhạy màn">
+          <div class="knob"></div>
+        </button>
+        <div style="position:relative">
+          <button class="menu-btn" id="menuBtn">⋯</button>
+          <div class="menu" id="menu">
+            <div>
+              <label>DPI: <span id="dpiVal">100</span></label>
+              <input type="range" id="dpiSlider" min="100" max="1024" value="100" />
+            </div>
+            <div class="buff-row">
+              <span>BUFF Nhạy màn</span>
+              <button class="toggle" id="buffNhay" data-on="false"><div class="knob"></div></button>
+              <input type="number" id="buffNhayVal" value="50" min="0" max="500" />
+            </div>
+            <div class="buff-row">
+              <span>BUFF Màn</span>
+              <button class="toggle" id="buffMan" data-on="false"><div class="knob"></div></button>
+              <input type="number" id="buffManVal" value="100" min="0" max="500" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div class="toast-wrap" id="toastWrap"></div>
+
+  <script>
+    const mainToggle=document.getElementById('mainToggle');
+    const menuBtn=document.getElementById('menuBtn');
+    const menu=document.getElementById('menu');
+    const dpiSlider=document.getElementById('dpiSlider');
+    const dpiVal=document.getElementById('dpiVal');
+    const buffNhay=document.getElementById('buffNhay');
+    const buffMan=document.getElementById('buffMan');
+    const buffNhayVal=document.getElementById('buffNhayVal');
+    const buffManVal=document.getElementById('buffManVal');
+    const toastWrap=document.getElementById('toastWrap');
+    const infoBtn=document.getElementById('infoBtn');
+    const infoBox=document.getElementById('infoBox');
+    const infoClose=document.getElementById('infoClose');
+
+    let baseDPI=100;
+    function effectiveDPI(){
+      let total=baseDPI;
+      if(buffNhay && buffNhay.dataset.on==="true") total+=parseInt(buffNhayVal.value)||0;
+      if(buffMan && buffMan.dataset.on==="true") total+=parseInt(buffManVal.value)||0;
+      return total;
+    }
+
+    function showToast(msg){
+      const t=document.createElement('div');
+      t.className='toast';
+      t.textContent=msg;
+      toastWrap.appendChild(t);
+      requestAnimationFrame(()=>t.classList.add('show'));
+      setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),250)},1000);
+    }
+
+    function toggleBtn(btn,labelOn,labelOff){
+      const isOn=btn.dataset.on==="true";
+      btn.dataset.on=(!isOn).toString();
+      showToast(btn.dataset.on==="true"?labelOn:labelOff);
+    }
+
+    if(mainToggle){
+      mainToggle.addEventListener('click',()=>{
+        toggleBtn(mainToggle,"Đã bật Nhạy màn","Đã tắt Nhạy màn");
+      });
+    }
+    if(buffNhay){
+      buffNhay.addEventListener('click',()=>{
+        toggleBtn(buffNhay,`BUFF Nhạy màn +${buffNhayVal.value}`,"Tắt BUFF Nhạy màn");
+      });
+    }
+    if(buffMan){
+      buffMan.addEventListener('click',()=>{
+        toggleBtn(buffMan,`BUFF Màn +${buffManVal.value}`,"Tắt BUFF Màn");
+      });
+    }
+    if(dpiSlider){
+      dpiSlider.addEventListener('input',()=>{
+        baseDPI=parseInt(dpiSlider.value);
+        dpiVal.textContent=baseDPI;
+      });
+    }
+
+    if(menuBtn){
+      menuBtn.addEventListener('click',()=>{
+        menu.classList.toggle('show');
+      });
+    }
+
+    if(infoBtn){
+      infoBtn.addEventListener('click',()=>{
+        infoBox.classList.toggle('show');
+      });
+    }
+    if(infoClose){
+      infoClose.addEventListener('click',()=>{
+        infoBox.classList.remove('show');
+      });
+    }
+
+    const loadBtn = document.getElementById('loadBtn');
+    const loadingArea = document.getElementById('loadingArea');
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
+    const appContent = document.getElementById('appContent');
+    const loadingWrapper = document.getElementById('loadingWrapper');
+
+    loadBtn.addEventListener('click', () => {
+      loadBtn.disabled = true;
+      loadingArea.style.display = 'block';
+      progressBar.style.width = '0%';
+      progressText.textContent = '0%';
+
+      let progress = 0;
+      const duration = 5000;
+      const stepTime = 100;
+      const step = 100 / (duration / stepTime);
+
+      const interval = setInterval(() => {
+        progress += step;
+        if (progress >= 100) {
+          progress = 100;
+          clearInterval(interval);
+          loadingWrapper.style.display = 'none';
+          appContent.style.display = 'block';
+          showToast("Hoàn tất !");
+        }
+        progressBar.style.width = progress + '%';
+        progressText.textContent = Math.round(progress) + '%';
+      }, stepTime);
+    });
+  </script>
+</body>
+</html>
